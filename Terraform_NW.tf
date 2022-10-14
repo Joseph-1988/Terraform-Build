@@ -1,5 +1,5 @@
 provider "aws" {
-	region = "us-east-1"
+        region = "us-east-1"
 }
 # Creating a VPC!
 resource "aws_vpc" "Test-VPC" {
@@ -90,5 +90,38 @@ resource "aws_subnet" "subnet4" {
 
   tags = {
     Name = "Test_Public_Subnet-1d"
+  }
+}
+# Creating an Internet Gateway for the VPC
+resource "aws_internet_gateway" "Test-IGW" {
+  depends_on = [
+    aws_vpc.Test-VPC,
+  ]
+
+  # VPC in which it has to be created!
+  vpc_id = aws_vpc.Test-VPC.id
+
+  tags = {
+    Name = "Test-IGW"
+  }
+}
+# Creating an Route Table for the Private subnet!
+resource "aws_route_table" "Public-Subnet-RT" {
+  depends_on = [
+    aws_vpc.Test-VPC,
+    aws_internet_gateway.Test-IGW
+  ]
+
+   # VPC ID
+  vpc_id = aws_vpc.Test-VPC.id
+
+  # NAT Rule
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.Test-IGW.id
+  }
+
+  tags = {
+    Name = "Public-Subnet-RT"
   }
 }

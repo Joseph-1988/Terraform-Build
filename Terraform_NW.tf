@@ -100,7 +100,6 @@ resource "aws_internet_gateway" "Test-IGW" {
 
   # VPC in which it has to be created!
   vpc_id = aws_vpc.Test-VPC.id
-
   tags = {
     Name = "Test-IGW"
   }
@@ -123,5 +122,60 @@ resource "aws_route_table" "Public-Subnet-RT" {
 
   tags = {
     Name = "Public-Subnet-RT"
+  }
+}
+# Creating a resource for the Route Table Association!
+resource "aws_route_table_association" "Public-RT-Association" {
+
+  depends_on = [
+#    aws_vpc.VPC-Test,
+    aws_subnet.subnet3,
+    aws_subnet.subnet4,
+    aws_route_table.Public-Subnet-RT
+  ]
+
+# Public Subnet ID
+  subnet_id      = aws_subnet.subnet3.id
+
+#  Route Table ID
+  route_table_id = aws_route_table.Public-Subnet-RT.id
+}
+# Creating an Elastic IP for the NAT Gateway!
+resource "aws_eip" "Test-Nat-Gateway-EIP" {
+  depends_on = [
+    aws_route_table_association.Public-RT-Association
+  ]
+  vpc = true
+}
+# Creating a NAT Gateway!
+resource "aws_nat_gateway" "Test-NAT-GW" {
+  depends_on = [
+    aws_eip.Test-Nat-Gateway-EIP
+  ]
+
+  # Allocating the Elastic IP to the NAT Gateway!
+  allocation_id = aws_eip.Test-Nat-Gateway-EIP.id
+
+  # Associating it in the Public Subnet!
+  subnet_id = aws_subnet.subnet3.id
+  tags = {
+    Name = "Test-NAT-GW"
+  }
+}
+# Creating a Route Table for the Nat Gateway!
+resource "aws_route_table" "Private-subnet-RT" {
+  depends_on = [
+    aws_nat_gateway.Test-NAT-GW
+  ]
+
+  vpc_id = aws_vpc.Test-VPC.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.Test-NAT-GW.id
+  }
+
+  tags = {
+    Name = "Private-Subnet-RT"
   }
 }

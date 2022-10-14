@@ -60,7 +60,6 @@ vpc_id = aws_vpc.Test-VPC
 resource "aws_subnet" "subnet3" {
   depends_on = [
     aws_vpc.Test-VPC,
-    aws_subnet.subnet1
   ]
   
   # VPC in which subnet has to be created!
@@ -79,7 +78,6 @@ resource "aws_subnet" "subnet3" {
 resource "aws_subnet" "subnet3" {
   depends_on = [
     aws_vpc.Test-VPC,
-    aws_subnet.subnet1
   ]
   
   # VPC in which subnet has to be created!

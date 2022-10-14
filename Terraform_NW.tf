@@ -7,7 +7,6 @@ provider "aws" {
   # Assign the profile name here!
   profile = "default"
 }
-
 # Creating a VPC!
 resource "aws_vpc" "Test-VPC" {
 

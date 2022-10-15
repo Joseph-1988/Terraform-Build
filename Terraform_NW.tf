@@ -328,3 +328,51 @@ resource "aws_security_group" "DB-SG-SSH" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+resource "aws_instance" "Test-Web-Server" {
+
+  depends_on = [
+    aws_vpc.Test-VPC,
+    aws_subnet.subnet3,
+    aws_subnet.subnet4,
+    aws_security_group.BH-SG,
+    aws_security_group.DB-SG-SSH
+  ]
+
+  # AMI ID [I have used my custom AMI which has some softwares pre installed]
+  ami = "ami-06640050dc3f556bb"
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.subnet3.id
+
+  # Keyname and security group are obtained from the reference of their instances created above!
+  # Here I am providing the name of the key which is already uploaded on the AWS console.
+  key_name = "Terraform"
+
+  # Security groups to use!
+  vpc_security_group_ids = [aws_security_group.WS-SG.id]
+
+  tags = {
+   Name = "Test-Web-Server"
+}
+}
+resource "aws_instance" "Test-MySQL" {
+  depends_on = [
+    aws_instance.Test-Web-Server,
+  ]
+
+  # Using my custom Private AMI which has most of the things configured for WordPress
+  # i.e. MySQL Installed!
+  ami = "ami-06640050dc3f556bb"
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.subnet1.id
+
+  # Keyname and security group are obtained from the reference of their instances created above!
+  key_name = "Terraform"
+
+  # Attaching 2 security groups here, 1 for the MySQL Database access by the Web-servers,
+  # & other one for the Bastion Host access for applying updates & patches!
+  vpc_security_group_ids = [aws_security_group.MySQL-SG.id, aws_security_group.DB-SG-SSH.id]
+
+  tags = {
+   Name = "Test-MySQL"
+  }
+}
